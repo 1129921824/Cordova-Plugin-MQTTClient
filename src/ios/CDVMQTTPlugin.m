@@ -95,7 +95,7 @@
     {
         jsonString = @"连接失败";
     }
-    [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onConnect('%@')", jsonString]];
+    [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onConnect('%@')", jsonString]];
 }
 
 //发送消息
@@ -151,7 +151,7 @@
       CDVPluginResult *pluginResult = nil;
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"subscribe success"];
       [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      //        [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onSubscribe('%s')", "subscribe success"]];
+      //        [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onSubscribe('%s')", "subscribe success"]];
     }];
 }
 
@@ -164,7 +164,7 @@
       CDVPluginResult *pluginResult = nil;
       pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"unsubscribe success"];
       [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
-      //        [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onUnsubscribe('%s')", "unsubscribe success"]];
+      //        [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onUnsubscribe('%s')", "unsubscribe success"]];
     }];
 }
 
@@ -200,7 +200,7 @@
     //这个是代理回调方法，接收到的数据可以在这里打印
     //使用字符类型格式化，也可以用json
     NSString *message = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onMessage('%@')", message]];
+    [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onMessage('%@')", message]];
 }
 
 //重新连接的监听方法
@@ -216,12 +216,12 @@
 - (void)connectionRefused:(MQTTSession *)session error:(NSError *)error
 {
     NSLog(@"connect refuse");
-    [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onConnectError('%@');", [error localizedDescription]]];
+    [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onConnectError('%@');", [error localizedDescription]]];
 }
 
 - (void)connectionError:(MQTTSession *)session error:(NSError *)error
 {
-    [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onConnectError('%@');", [error localizedDescription]]];
+    [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onConnectError('%@');", [error localizedDescription]]];
 }
 
 - (void)connectionClosed:(MQTTSession *)session
@@ -233,7 +233,7 @@
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:status options:0 error:&error];
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     NSLog(@"connect closed");
-    [self.commandDelegate evalJs:[NSString stringWithFormat:@"mqtt.onDisconnect('%@')", jsonString]];
+    [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onDisconnect('%@')", jsonString]];
 }
 
 @end
