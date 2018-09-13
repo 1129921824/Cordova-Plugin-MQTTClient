@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<plugin id="com.gd.mqtt" version="1.0.0" xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android">
+    <name>mqtt</name>
+    <js-module name="MQTTPlugin" src="www/mqtt.js">
+        <clobbers target="cordova.plugins.mqtt"/>
+    </js-module>
+    <platform name="android">
+        <config-file parent="/*" target="res/xml/config.xml">
+            <feature name="MQTTPlugin">
+                <param name="android-package" value="com.gd.mqtt.MQTTPlugin"/>
+            </feature>
+        </config-file>
+        <config-file parent="/*" target="AndroidManifest.xml"/>
+        <framework src="org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0"/>
+        <source-file src="src/android/MQTTPlugin.java" target-dir="src/com/gd/mqtt/mqtt"/>
+    </platform>
+    <platform name="ios">
+        <config-file parent="/*" target="config.xml">
+            <feature name="MQTTPlugin">
+                <param name="ios-package" value="CDVMQTTPlugin"/>
+            </feature>
+        </config-file>
+        <header-file src="src/ios/CDVMQTTPlugin.h"/>
+        <source-file src="src/ios/CDVMQTTPlugin.m"/>
+
+        <framework src="CFNetwork.framework"/>
+        <framework src="CoreData.framework"/>
+        <framework src="src/ios/Frameworks/MQTTClient.framework" custom="true"/>
+    </platform>
+</plugin>
