@@ -5,6 +5,7 @@
     MQTTSession *mysession;
     NSString *onConnectCallbackId; //回调id
     BOOL *closeMQTT;
+    NSTimer *reconnect;
 }
 
 - (void)connect:(CDVInvokedUrlCommand *)command
@@ -58,15 +59,13 @@
 
       mysession = [[MQTTSession alloc] init];
       mysession.transport = transport;
-      //监听
-      [mysession addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionOld context:nil];
       mysession.delegate = self;
 
       [mysession connectWithConnectHandler:^(NSError *error) {
         CDVPluginResult *pluginResult = nil;
         if (error == nil)
         {
-            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_ERROR messageAsString:@"connect success"];
+            pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:@"connect success"];
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
         else
@@ -75,9 +74,12 @@
             [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
         }
       }];
+      //监听
+      [mysession addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionOld context:nil];
     }];
 }
 
+//解析连接状态 1连接成功 0连接失败
 - (void)connected:(MQTTSession *)session
 {
     NSDictionary *status = @{
@@ -171,6 +173,7 @@
 - (void)disconnect:(CDVInvokedUrlCommand *)command
 {
     [self.commandDelegate runInBackground:^{
+      //手动关闭
       closeMQTT = true;
       //    [mysession disconnect];
       [mysession closeWithDisconnectHandler:^(NSError *error) {
@@ -190,8 +193,6 @@
     }];
 }
 
-
-
 #pragma MARK MQTTSessionDelegate 以下是代理的方法
 //接收的消息在这里处理
 - (void)newMessage:(MQTTSession *)session data:(NSData *)data onTopic:(NSString *)topic qos:(MQTTQosLevel)qos retained:(BOOL)retained mid:(unsigned int)mid
@@ -209,8 +210,27 @@
     if (mysession.status == 4 && closeMQTT == false)
     {
         NSLog(@"reconnect");
+
+        //[mysession connect];
+        //监听方法使用定时器
+        reconnect = [NSTimer scheduledTimerWithTimeInterval:5.0f target:self selector:@selector(monitorStatus) userInfo:nil repeats:NO];
+    }
+    if (mysession.status == 2)
+    {
+        NSLog(@"关闭定时器");
+        [reconnect invalidate];
+        reconnect = nil;
+        [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onReconnect('%@')", @"Reconnect Success"]];
+    }
+}
+
+- (void)monitorStatus
+{
+    if (mysession.status == 4)
+    {
         [mysession connect];
     }
+    NSLog(@"定时器操作");
 }
 
 - (void)connectionRefused:(MQTTSession *)session error:(NSError *)error
@@ -233,7 +253,7 @@
     NSData *jsonData = [NSJSONSerialization dataWithJSONObject:status options:0 error:&error];
     NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     NSLog(@"connect closed");
-    [self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onDisconnect('%@')", jsonString]];
+    //[self.commandDelegate evalJs:[NSString stringWithFormat:@"cordova.plugins.mqtt.onDisconnect('%@')", jsonString]];
 }
 
 @end
